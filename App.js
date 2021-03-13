@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
+import { Card, Text } from 'react-native-elements';
 
 // Components
 import Deck from './src/components/Deck';
@@ -17,9 +18,23 @@ const DATA = [
   ];
 
 const App = () => {
+    const [ showDeck, setShowDeck ] = useState(true);
+
+    const handleEmptyState = () => {
+        setShowDeck(false);
+    }
+
     return (
         <SafeAreaView>
-            <Deck data={DATA}/>
+            {showDeck
+                ?   <Deck 
+                        data={DATA} 
+                        callback={handleEmptyState} 
+                    />
+                :   <Card>
+                        <Text>No more cards</Text>
+                    </Card>
+            }
         </SafeAreaView>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Animated } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Card, Button, Text } from 'react-native-elements';
 
 const SwipeCard = ({ text, uri }) => {
