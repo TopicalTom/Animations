@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { 
     StyleSheet, 
     Animated, 
-    View, 
     useWindowDimensions, 
-    PanResponder 
+    PanResponder,
+    LayoutAnimation,
+    UIManager 
 } from 'react-native';
 
 // Components
@@ -12,11 +13,12 @@ import SwipeCard from './SwipeCard';
 
 const Deck = ({ data = [], callback = () => {} }) => {
     const [ deckIndex, setDeckIndex ] = useState(0);
+    
     const SCREEN_WIDTH = useWindowDimensions().width;
     const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
     const SWIPE_OUT_DURATION = 250;
     
-    // Card Swipe Tracking
+    // Card Swipe Gesture Tracking
     const pan = useRef(new Animated.ValueXY()).current;
     const panResponder = useRef(
         PanResponder.create({
@@ -39,17 +41,14 @@ const Deck = ({ data = [], callback = () => {} }) => {
         })
     ).current;
 
-    // 
     const onSwipeRight = (item) => {
         console.log(item)
     };
 
-    //
     const onSwipeLeft = (item) => {
         console.log(item)
     };
 
-    //
     const onSwipeComplete = (direction) => {
         const item = data[deckIndex];
         direction === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
@@ -57,7 +56,6 @@ const Deck = ({ data = [], callback = () => {} }) => {
         setDeckIndex(deckIndex => deckIndex + 1);
     };
 
-    //
     const forceSwipe = (direction) => {
         const x = direction === 'right' ? SCREEN_WIDTH : -SCREEN_WIDTH;
         Animated.timing(pan, {
@@ -69,7 +67,6 @@ const Deck = ({ data = [], callback = () => {} }) => {
         });
     };
 
-    //
     const resetPosition = () => {
         Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
@@ -83,19 +80,30 @@ const Deck = ({ data = [], callback = () => {} }) => {
             inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
             outputRange:['-120deg', '0deg', '120deg']
         })
-
         return { 
             ...pan.getLayout(),
             transform: [{ rotate }],
         };
     }
 
+    // Adds Spring Animation to Advancing Cards
+    useLayoutEffect(() => {
+        UIManager.setLayoutAnimationEnabledExperimental && 
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+        LayoutAnimation.spring();
+    });
+
+    // Watches for Dataset Change
+    useEffect(() => {
+        setDeckIndex(0);
+    }, [data]);
+
     // Watches for Empty Card List
     useEffect(() => {
         if (deckIndex >= data.length) {
             callback();
         };
-    }, [deckIndex, data])
+    }, [deckIndex, data]);
 
     return (
         <>
@@ -120,20 +128,21 @@ const Deck = ({ data = [], callback = () => {} }) => {
                     );
                 }
                 return (
-                    <View 
+                    <Animated.View 
                         key={item.id}
                         style={[
                             styles.cardStyle, 
                             { 
                                 zIndex: cardIndex * -1, 
-                                width: SCREEN_WIDTH 
+                                width: SCREEN_WIDTH,
+                                top: 10 * (cardIndex - deckIndex)
                             }
                         ]}
                     >
                         <SwipeCard {...item} />
-                    </View>
+                    </Animated.View>
                 );
-            }).reverse()}
+            })}
         </>
     );
 };
